@@ -60,7 +60,7 @@ def get_minibatches_idx(n, batch_size, shuffle=False):
 
     minibatches = []
     minibatch_start = 0
-    for i in range(n // batch_size):
+    for _ in range(n // batch_size):
         minibatches.append(idx_list[minibatch_start:
                                     minibatch_start + batch_size])
         minibatch_start += batch_size
@@ -99,7 +99,7 @@ def prepare_data(seqs, labels, maxlen=None):
         labels = new_labels
         seqs = new_seqs
 
-        if len(lengths) < 1:
+        if not lengths:
             return None, None, None
 
     n_samples = len(seqs)
@@ -115,16 +115,20 @@ def prepare_data(seqs, labels, maxlen=None):
 
 
 def dropout_layer(state_before, use_noise, trng):
-    proj = tensor.switch(use_noise,
-                         (state_before *
-                          trng.binomial(state_before.shape, p=0.5, n=1,
-                                        dtype=state_before.dtype)),
-                         state_before * 0.5)
-    return proj
+    return tensor.switch(
+        use_noise,
+        (
+            state_before
+            * trng.binomial(
+                state_before.shape, p=0.5, n=1, dtype=state_before.dtype
+            )
+        ),
+        state_before * 0.5,
+    )
 
 
 def _p(pp, name):
-    return '%s_%s' % (pp, name)
+    return f'{pp}_{name}'
 
 
 def init_params(config):
@@ -187,11 +191,7 @@ def lstm_layer(tparams, state_below, config, prefix='lstm', mask=None):
     computations of inputs to different gates.
     """
     nsteps = state_below.shape[0]
-    if state_below.ndim == 3:
-        n_samples = state_below.shape[1]
-    else:
-        n_samples = 1  # mini batch size is 1.
-
+    n_samples = state_below.shape[1] if state_below.ndim == 3 else 1
     assert mask is not None
 
     def _slice(_x, n, dim):
@@ -258,10 +258,7 @@ def build_model(tparams, config):
 
     pred = tensor.nnet.softmax(tensor.dot(proj, tparams['U']) + tparams['b'])
 
-    off = 1e-8
-    if pred.dtype == 'float16':
-        off = 1e-6
-
+    off = 1e-6 if pred.dtype == 'float16' else 1e-8
     cost = -tensor.log(pred[tensor.arange(n_samples), y] + off).mean()
 
     return use_noise, x, mask, y, cost

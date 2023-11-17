@@ -179,7 +179,7 @@ class LSTMNet(object):
 
 
 def get_batches_idx(n, batch_size, shuffle=False):
-    """Get the indices of samples for each batch.
+  """Get the indices of samples for each batch.
     Args:
       n: sample size, int.
       batch_size: batch size, int.
@@ -187,21 +187,21 @@ def get_batches_idx(n, batch_size, shuffle=False):
     Returns:
       A list where each element contains the batch number and batch indices.
     """
-    idx_list = np.arange(n)
-    if shuffle:
-        np.random.shuffle(idx_list)
+  idx_list = np.arange(n)
+  if shuffle:
+      np.random.shuffle(idx_list)
 
-    batches = []
-    batch_start = 0
-    for i in range(n // batch_size):
-        batches.append(idx_list[batch_start:batch_start + batch_size])
-        batch_start += batch_size
+  batches = []
+  batch_start = 0
+  for _ in range(n // batch_size):
+    batches.append(idx_list[batch_start:batch_start + batch_size])
+    batch_start += batch_size
 
-    # Make a batch out of what is left
-    if batch_start != n:
-       batches.append(idx_list[batch_start:])
+  # Make a batch out of what is left
+  if batch_start != n:
+     batches.append(idx_list[batch_start:])
 
-    return zip(range(len(batches)), batches)
+  return zip(range(len(batches)), batches)
 
 
 def prepare_data(seqs, labels, maxlen=None):
@@ -237,7 +237,7 @@ def prepare_data(seqs, labels, maxlen=None):
     labels = new_labels
     seqs = new_seqs
 
-  if len(lengths) < 1:
+  if not lengths:
     return None, None, None, None
 
   n_samples = len(seqs)
@@ -295,8 +295,7 @@ def evaluate(logits, targets):
     that were predicted correctly.
   """
   correct = tf.nn.in_top_k(logits, targets, 1)
-  num_correct = tf.reduce_sum(tf.cast(correct, tf.int32))
-  return num_correct
+  return tf.reduce_sum(tf.cast(correct, tf.int32))
 
 
 def time_epoch(session, m, data, config):

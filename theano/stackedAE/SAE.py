@@ -85,14 +85,10 @@ class StackedAutoEncoder(object):
         self.x = T.matrix('x')  # the data is presented as rasterized images
         self.y = T.ivector('y')  # the labels are presented as 1D vector of
 
-        for i in xrange(self.n_layers):     # used to be n layers
+        for i in xrange(self.n_layers): # used to be n layers
 
             # construct the sigmoid layer = encoder stack
-            if i == 0:
-                layer_input = self.x
-            else:
-                layer_input = self.sigmoid_layers[-1].output
-
+            layer_input = self.x if i == 0 else self.sigmoid_layers[-1].output
             sigmoid_layer = HiddenLayer(rng=numpy_rng,
                                         input=layer_input,
                                         n_in=(n_ins if i == 0 else
@@ -143,9 +139,7 @@ class StackedAutoEncoder(object):
 
         forward_backward_step = []
         forward_step_fns = []
-        i = 0
         for AE in self.AE_layers:
-
             # get the cost and the updates list
             cost = AE.get_cost_updates()
 
@@ -167,8 +161,6 @@ class StackedAutoEncoder(object):
                     givens={
                             self.x: self.train_set_x[batch_begin: batch_end],
                             }))
-            i += 1
-
         return forward_backward_step, forward_step_fns
 
     def build_finetune_functions(self, batch_size):
@@ -325,20 +317,16 @@ class AutoEncoder(object):
 
         L = T.sum((self.x-z)**2, axis=1)
 
-        cost = T.mean(L)
-
-        return cost
+        return T.mean(L)
 
     def get_updates(self, learning_rate, cost):
         # compute the gradients of the cost of the `dA` with respect
         # to its parameters
         gparams = T.grad(cost, self.params)
-        # generate the list of updates
-        updates = [
+        return [
             (param, param - learning_rate * gparam)
             for param, gparam in zip(self.params, gparams)
         ]
-        return updates
 
 
 def time_theano_fn(fn, index, GPU_bool):
@@ -348,8 +336,7 @@ def time_theano_fn(fn, index, GPU_bool):
     fn(index)
     if GPU_bool:
         theano.sandbox.cuda.synchronize()
-    elapsed_time = time.time()*1000 - start
-    return elapsed_time
+    return time.time()*1000 - start
 
 
 def time_SAE():

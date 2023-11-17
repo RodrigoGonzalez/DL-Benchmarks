@@ -117,8 +117,6 @@ def time_lenet():
                 forward_time[count] = temp1 - s
                 s = time.time()*1000
                 forward_backward_step()
-                temp2 = time.time()*1000
-                forward_backward_time[count] = temp2 - s
             else:
                 theano.sandbox.cuda.synchronize()
                 s = time.time()*1000
@@ -130,8 +128,8 @@ def time_lenet():
                 s = time.time()*1000
                 forward_backward_step()
                 theano.sandbox.cuda.synchronize()
-                temp2 = time.time()*1000
-                forward_backward_time[count] = temp2 - s
+            temp2 = time.time()*1000
+            forward_backward_time[count] = temp2 - s
             count += 1
         else:   # dry runs
             forward_step()

@@ -267,8 +267,8 @@ def _get_concat_variable(name, shape, dtype, num_shards):
   if len(sharded_variable) == 1:
     return sharded_variable[0]
 
-  concat_name = name + "/concat"
-  concat_full_name = vs.get_variable_scope().name + "/" + concat_name + ":0"
+  concat_name = f"{name}/concat"
+  concat_full_name = f"{vs.get_variable_scope().name}/{concat_name}:0"
   for value in ops.get_collection(ops.GraphKeys.CONCATENATED_VARIABLES):
     if value.name == concat_full_name:
       return value
@@ -551,12 +551,12 @@ class DropoutWrapper(RNNCell):
     """
     if not isinstance(cell, RNNCell):
       raise TypeError("The parameter cell is not a RNNCell.")
-    if (isinstance(input_keep_prob, float) and
-        not (input_keep_prob >= 0.0 and input_keep_prob <= 1.0)):
+    if isinstance(input_keep_prob, float) and (input_keep_prob < 0.0
+                                               or input_keep_prob > 1.0):
       raise ValueError("Parameter input_keep_prob must be between 0 and 1: %d"
                        % input_keep_prob)
-    if (isinstance(output_keep_prob, float) and
-        not (output_keep_prob >= 0.0 and output_keep_prob <= 1.0)):
+    if isinstance(output_keep_prob, float) and (output_keep_prob < 0.0
+                                                or output_keep_prob > 1.0):
       raise ValueError("Parameter input_keep_prob must be between 0 and 1: %d"
                        % output_keep_prob)
     self._cell = cell
@@ -701,7 +701,7 @@ class MultiRNNCell(RNNCell):
 
   @property
   def state_size(self):
-    return sum([cell.state_size for cell in self._cells])
+    return sum(cell.state_size for cell in self._cells)
 
   def __call__(self, inputs, state, scope=None):
     """Run this multi-layer cell on inputs, starting from state."""
@@ -745,9 +745,9 @@ def linear(args, output_size, bias, bias_start=0.0, scope=None):
   shapes = [a.get_shape().as_list() for a in args]
   for shape in shapes:
     if len(shape) != 2:
-      raise ValueError("Linear is expecting 2D arguments: %s" % str(shapes))
+      raise ValueError(f"Linear is expecting 2D arguments: {shapes}")
     if not shape[1]:
-      raise ValueError("Linear expects shape[1] of arguments: %s" % str(shapes))
+      raise ValueError(f"Linear expects shape[1] of arguments: {shapes}")
     else:
       total_arg_size += shape[1]
 

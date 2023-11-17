@@ -12,6 +12,7 @@
 
 """Timing of AlexNet."""
 
+
 from neon.backends import gen_backend
 from neon.data import ArrayIterator
 from neon.initializers import Gaussian, GlorotUniform, Constant
@@ -58,26 +59,54 @@ init_uni = GlorotUniform()
 # no local response normalization
 relu = Rectlin()
 layers = []
-layers.append(Conv((11, 11, 96), strides=4, padding=0, init=init1,
-                   bias=Constant(0), activation=relu))
-layers.append(Pooling(3, strides=2))
-layers.append(Conv((5, 5, 256), padding=2, init=init1, bias=Constant(1),
-                   activation=relu))
-layers.append(Pooling(3, strides=2))
-layers.append(Conv((3, 3, 384), padding=1, init=init2, bias=Constant(0),
-                   activation=relu))
-layers.append(Conv((3, 3, 384), padding=1, init=init2, bias=Constant(1),
-                   activation=relu))
-layers.append(Conv((3, 3, 256), padding=1, init=init2, bias=Constant(1),
-                   activation=relu))
-layers.append(Pooling(3, strides=2))
-layers.append(Affine(nout=4096, init=init1, bias=Constant(1), activation=relu))
-layers.append(Dropout(keep=0.5))
-layers.append(Affine(nout=4096, init=init1, bias=Constant(1), activation=relu))
-layers.append(Dropout(keep=0.5))
-layers.append(Affine(nout=1000, init=init1, bias=Constant(-7),
-                     activation=Softmax()))
-
+layers.extend(
+    (
+        Conv(
+            (11, 11, 96),
+            strides=4,
+            padding=0,
+            init=init1,
+            bias=Constant(0),
+            activation=relu,
+        ),
+        Pooling(3, strides=2),
+        Conv(
+            (5, 5, 256),
+            padding=2,
+            init=init1,
+            bias=Constant(1),
+            activation=relu,
+        ),
+        Pooling(3, strides=2),
+        Conv(
+            (3, 3, 384),
+            padding=1,
+            init=init2,
+            bias=Constant(0),
+            activation=relu,
+        ),
+        Conv(
+            (3, 3, 384),
+            padding=1,
+            init=init2,
+            bias=Constant(1),
+            activation=relu,
+        ),
+        Conv(
+            (3, 3, 256),
+            padding=1,
+            init=init2,
+            bias=Constant(1),
+            activation=relu,
+        ),
+        Pooling(3, strides=2),
+        Affine(nout=4096, init=init1, bias=Constant(1), activation=relu),
+        Dropout(keep=0.5),
+        Affine(nout=4096, init=init1, bias=Constant(1), activation=relu),
+        Dropout(keep=0.5),
+        Affine(nout=1000, init=init1, bias=Constant(-7), activation=Softmax()),
+    )
+)
 # setup cost function as CrossEntropy
 cost = GeneralizedCost(costfunc=CrossEntropyMulti())
 

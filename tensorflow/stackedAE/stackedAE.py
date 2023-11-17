@@ -47,7 +47,7 @@ def _linear(inpOp, nIn, nOut):
 def _affine(inpOp, nIn, nOut):
     global affine_counter
     global parameters
-    name = 'affine' + str(affine_counter)
+    name = f'affine{str(affine_counter)}'
     affine_counter += 1
     with tf.name_scope(name) as scope:
         kernel = tf.Variable(tf.truncated_normal([nIn, nOut],
@@ -65,20 +65,20 @@ def _affineShared(inpOp, nIn, nOut):
     global affine_counter
     global parameters
     affine_counter -= 1  # for weight sharing
-    name = 'affineDec' + str(affine_counter)
-    name_kernel = 'affine' + str(affine_counter)
-    
+    name = f'affineDec{affine_counter}'
+    name_kernel = f'affine{affine_counter}'
+
     with tf.name_scope(name) as scope:
         biases = tf.Variable(tf.constant(0.0, shape=[nOut], dtype=tf.float32),
                              trainable=True, name='biases')
         parameters += [biases]
-        
+
         with tf.variable_scope(name_kernel):
             kernel = tf.get_variable('weights', [nOut, nIn])
-        
-        affine = tf.sigmoid(tf.matmul(inpOp, tf.transpose(kernel)) + biases,
-                             name=name)
-        return affine
+
+        return tf.sigmoid(
+            tf.matmul(inpOp, tf.transpose(kernel)) + biases, name=name
+        )
 
 
 def loss_classifier(logits, labels, config):
@@ -90,15 +90,13 @@ def loss_classifier(logits, labels, config):
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits,
                                                             onehot_labels,
                                                             name='entropy')
-    loss = tf.reduce_mean(cross_entropy, name='entropy_mean')
-    return loss
+    return tf.reduce_mean(cross_entropy, name='entropy_mean')
 
 
 def loss_reconstruction(images_recons, featureMaps, config):
-    loss_recons = tf.reduce_sum(tf.square(images_recons - featureMaps)) / \
-                  (2 * config.batch_size)
-    
-    return loss_recons
+    return tf.reduce_sum(tf.square(images_recons - featureMaps)) / (
+        2 * config.batch_size
+    )
 
 
 def inference_AE1(images, config):
@@ -133,9 +131,7 @@ def inference_finetuning(images, config):
     enc1 = _affine(resh1, config.image_width**2, config.encoder_size[0])
     enc2 = _affine(enc1, config.encoder_size[0], config.encoder_size[1])
     enc3 = _affine(enc2, config.encoder_size[1], config.encoder_size[2])
-    classifier_outputs = _linear(enc3, config.encoder_size[2], config.ydim)
-    
-    return classifier_outputs
+    return _linear(enc3, config.encoder_size[2], config.ydim)
 
 
 def time_tensorflow_run(session, target, info_string, config):

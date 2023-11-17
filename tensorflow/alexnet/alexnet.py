@@ -38,7 +38,7 @@ class Config(object):
 def _conv(inpOp, nIn, nOut, kH, kW, dH, dW, padType):
     global conv_counter
     global parameters
-    name = 'conv' + str(conv_counter)
+    name = f'conv{str(conv_counter)}'
     conv_counter += 1
     with tf.name_scope(name) as scope:
         kernel = tf.Variable(tf.truncated_normal([kH, kW, nIn, nOut],
@@ -56,7 +56,7 @@ def _conv(inpOp, nIn, nOut, kH, kW, dH, dW, padType):
 def _affine(inpOp, nIn, nOut):
     global affine_counter
     global parameters
-    name = 'affine' + str(affine_counter)
+    name = f'affine{str(affine_counter)}'
     affine_counter += 1
     with tf.name_scope(name) as scope:
         kernel = tf.Variable(tf.truncated_normal([nIn, nOut],
@@ -72,7 +72,7 @@ def _affine(inpOp, nIn, nOut):
 def _mpool(inpOp, kH, kW, dH, dW):
     global pool_counter
     global parameters
-    name = 'pool' + str(pool_counter)
+    name = f'pool{str(pool_counter)}'
     pool_counter += 1
     return tf.nn.max_pool(inpOp,
                           ksize=[1, kH, kW, 1],
@@ -90,8 +90,7 @@ def loss(logits, labels, config):
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits,
                                                             onehot_labels,
                                                             name='entropy')
-    loss = tf.reduce_mean(cross_entropy, name='entropy_mean')
-    return loss
+    return tf.reduce_mean(cross_entropy, name='entropy_mean')
 
 
 def inference(images, config):
@@ -112,9 +111,7 @@ def inference(images, config):
     affn1 = tf.nn.dropout(affn1, 0.5, seed=config.SEED)
     affn2 = _affine(affn1, 4096, 4096)
     affn2 = tf.nn.dropout(affn2, 0.5, seed=config.SEED)
-    affn3 = _affine(affn2, 4096, config.ydim)
-
-    return affn3
+    return _affine(affn2, 4096, config.ydim)
 
 
 def time_tensorflow_run(session, target, info_string, config):

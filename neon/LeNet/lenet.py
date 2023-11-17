@@ -12,6 +12,7 @@
 
 """Timing of LeNet."""
 
+
 from neon.backends import gen_backend
 from neon.data import ArrayIterator
 from neon.initializers import Gaussian, GlorotUniform, Constant
@@ -54,16 +55,30 @@ init_uni = GlorotUniform()
 
 # setup model layers
 layers = []
-layers.append(Conv((5, 5, 20), padding=0, strides=1, init=init_uni,
-                   bias=Constant(0), activation=Tanh()))
-layers.append(Pooling(2, strides=2, op='max'))
-# cannot be 50!!! should be multiple of 4
-layers.append(Conv((5, 5, 52), padding=0, strides=1, init=init_uni,
-                   bias=Constant(0), activation=Tanh()))
-layers.append(Pooling(2, strides=2, op='max'))
-layers.append(Affine(nout=500, init=init_norm, activation=Rectlin()))
-layers.append(Affine(nout=config.ydim, init=init_norm, activation=Softmax()))
-
+layers.extend(
+    (
+        Conv(
+            (5, 5, 20),
+            padding=0,
+            strides=1,
+            init=init_uni,
+            bias=Constant(0),
+            activation=Tanh(),
+        ),
+        Pooling(2, strides=2, op='max'),
+        Conv(
+            (5, 5, 52),
+            padding=0,
+            strides=1,
+            init=init_uni,
+            bias=Constant(0),
+            activation=Tanh(),
+        ),
+        Pooling(2, strides=2, op='max'),
+        Affine(nout=500, init=init_norm, activation=Rectlin()),
+        Affine(nout=config.ydim, init=init_norm, activation=Softmax()),
+    )
+)
 # setup cost function as CrossEntropy
 cost = GeneralizedCost(costfunc=CrossEntropyMulti())
 
@@ -117,7 +132,7 @@ while flag:
             x = network.fprop(x)
             delta = network.cost.get_errors(x, t)
             network.bprop(delta)
-        
+
 print("time forward: %.4f +- %.4f ms, batch size: %d" %
       (np.mean(forward_time), np.std(forward_time), config.batch_size))
 print("time gradient: %.4f +- %.4f ms, batch size: %d" %
